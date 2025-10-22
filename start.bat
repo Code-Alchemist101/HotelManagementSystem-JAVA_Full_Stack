@@ -67,7 +67,22 @@ echo [INFO] Setting up database...
 echo This will create the database and user if they don't exist
 echo.
 
-set PGPASSWORD=Chinna@07
+:: Ask for PostgreSQL password dynamically
+set /p DB_PASS=Enter PostgreSQL password (for user 'postgres'): 
+echo.
+
+:: Test connection
+set PGPASSWORD=%DB_PASS%
+psql -U postgres -h localhost -c "SELECT version();" >nul 2>&1
+if %errorlevel% neq 0 (
+    color 0C
+    echo [ERROR] Could not connect to PostgreSQL. Please check the password and try again.
+    pause
+    exit /b 1
+)
+echo [OK] Connected to PostgreSQL successfully
+echo.
+
 psql -U postgres -h localhost -c "SELECT 1 FROM pg_database WHERE datname='hotel_db'" | findstr "1 row" >nul 2>&1
 
 if %errorlevel% neq 0 (
@@ -88,7 +103,7 @@ psql -U postgres -h localhost -c "SELECT 1 FROM pg_roles WHERE rolname='hotel_us
 
 if %errorlevel% neq 0 (
     echo [INFO] Creating user 'hotel_user'...
-    psql -U postgres -h localhost -c "CREATE USER hotel_user WITH PASSWORD 'Chinna@07';" >nul 2>&1
+    psql -U postgres -h localhost -c "CREATE USER hotel_user WITH PASSWORD '%DB_PASS%';"
     psql -U postgres -h localhost -c "GRANT ALL PRIVILEGES ON DATABASE hotel_db TO hotel_user;" >nul 2>&1
     if %errorlevel% equ 0 (
         echo [OK] User created and privileges granted
