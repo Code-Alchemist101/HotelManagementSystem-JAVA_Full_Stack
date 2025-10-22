@@ -67,7 +67,7 @@ echo [INFO] Setting up database...
 echo This will create the database and user if they don't exist
 echo.
 
-set PGPASSWORD=postgres
+set PGPASSWORD=Chinna@07
 psql -U postgres -h localhost -c "SELECT 1 FROM pg_database WHERE datname='hotel_db'" | findstr "1 row" >nul 2>&1
 
 if %errorlevel% neq 0 (
