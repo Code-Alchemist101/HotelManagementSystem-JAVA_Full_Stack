@@ -68,11 +68,11 @@ echo This will create the database and user if they don't exist
 echo.
 
 :: Ask for PostgreSQL password dynamically
-set /p DB_PASS=Enter PostgreSQL password (for user 'postgres'): 
+set /p DB_PASSWORD=Enter PostgreSQL password (for user 'postgres'): 
 echo.
 
 :: Test connection
-set PGPASSWORD=%DB_PASS%
+set PGPASSWORD=%DB_PASSWORD%
 psql -U postgres -h localhost -c "SELECT version();" >nul 2>&1
 if %errorlevel% neq 0 (
     color 0C
@@ -103,7 +103,7 @@ psql -U postgres -h localhost -c "SELECT 1 FROM pg_roles WHERE rolname='hotel_us
 
 if %errorlevel% neq 0 (
     echo [INFO] Creating user 'hotel_user'...
-    psql -U postgres -h localhost -c "CREATE USER hotel_user WITH PASSWORD '%DB_PASS%';"
+    psql -U postgres -h localhost -c "CREATE USER hotel_user WITH PASSWORD '%DB_PASSWORD%';"
     psql -U postgres -h localhost -c "GRANT ALL PRIVILEGES ON DATABASE hotel_db TO hotel_user;" >nul 2>&1
     if %errorlevel% equ 0 (
         echo [OK] User created and privileges granted
