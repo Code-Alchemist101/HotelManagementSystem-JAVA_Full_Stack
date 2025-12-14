@@ -179,7 +179,7 @@ if exist "null" del "null" >nul 2>&1
 color 0A
 echo [INFO] Starting Backend Server...
 cd hotelmanagement\hotelmanagement
-start cmd /k "mvnw.cmd spring-boot:run"
+start cmd /k "mvnw.cmd spring-boot:run -Dspring.datasource.password=%DB_PASS%"
 cd ..\..
 echo.
 

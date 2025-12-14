@@ -28,13 +28,9 @@ const DashboardPage = ({ user, showToast }) => {
         user.role === USER_ROLES.ADMIN ? api.getBookings() : api.getUserBookings(user.userId)
       ]);
 
-      // FIXED: Count only truly available rooms (available = true in DB)
       const availableRooms = rooms.filter(r => r.available === true).length;
-      
-      // FIXED: Count only active bookings (status = BOOKED)
       const activeBookings = bookings.filter(b => b.status === 'BOOKED').length;
-      
-      // Calculate revenue (only completed bookings)
+
       const revenue = bookings
         .filter(b => b.status === 'COMPLETED')
         .reduce((sum, b) => {
@@ -44,9 +40,7 @@ const DashboardPage = ({ user, showToast }) => {
           return sum + (nights * (b.room?.price || 0));
         }, 0);
 
-      // FIXED: Calculate occupancy rate correctly
-      // Occupancy = (Total Rooms - Available Rooms) / Total Rooms * 100
-      const occupancyRate = rooms.length > 0 
+      const occupancyRate = rooms.length > 0
         ? (((rooms.length - availableRooms) / rooms.length) * 100).toFixed(1)
         : 0;
 
@@ -59,7 +53,6 @@ const DashboardPage = ({ user, showToast }) => {
         occupancyRate
       });
 
-      // Get recent bookings (last 5)
       const sorted = [...bookings].sort((a, b) => b.id - a.id).slice(0, 5);
       setRecentBookings(sorted);
     } catch (error) {
@@ -72,55 +65,56 @@ const DashboardPage = ({ user, showToast }) => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-xl text-gray-600">Loading dashboard...</div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-400">Loading your data...</p>
+        </div>
       </div>
     );
   }
 
   const StatCard = ({ icon: Icon, label, value, color, suffix = '' }) => (
-    <div className="bg-white rounded-lg shadow-md p-6 border-l-4" style={{ borderColor: color }}>
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-600 mb-1">{label}</p>
-          <p className="text-3xl font-bold text-gray-800">
-            {value}{suffix}
-          </p>
-        </div>
-        <div className="bg-gray-100 rounded-full p-3">
-          <Icon className="w-8 h-8" style={{ color }} />
-        </div>
+    <div className="glass-card p-6 flex items-center justify-between hover:scale-[1.02] transition-transform duration-300">
+      <div>
+        <p className="text-sm font-medium text-[#86868B] mb-1">{label}</p>
+        <p className="text-3xl font-bold text-[#1D1D1F] tracking-tight">
+          {value}{suffix}
+        </p>
+      </div>
+      <div className={`p-3 rounded-2xl ${color.replace('text-', 'bg-').replace('600', '100')}`}>
+        <Icon className={`w-6 h-6 ${color}`} />
       </div>
     </div>
   );
 
   return (
-    <div>
-      <div className="mb-8">
-        <h2 className="text-3xl font-bold text-gray-800 mb-2">
-          Welcome back, {user.username}!
+    <div className="animate-fade-in">
+      <div className="mb-10">
+        <h2 className="text-3xl font-bold text-[#1D1D1F] mb-1">
+          Welcome back, {user.username}
         </h2>
-        <p className="text-gray-600">Here's what's happening with your hotel today.</p>
+        <p className="text-[#86868B]">Here's an overview of your property today.</p>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
         <StatCard
           icon={Hotel}
           label="Total Rooms"
           value={stats.totalRooms}
-          color="#3B82F6"
+          color="text-blue-600"
         />
         <StatCard
           icon={Hotel}
           label="Available Rooms"
           value={stats.availableRooms}
-          color="#10B981"
+          color="text-emerald-500"
         />
         <StatCard
           icon={Calendar}
           label="Active Bookings"
           value={stats.activeBookings}
-          color="#F59E0B"
+          color="text-amber-500"
         />
         {user.role === USER_ROLES.ADMIN && (
           <>
@@ -128,63 +122,76 @@ const DashboardPage = ({ user, showToast }) => {
               icon={DollarSign}
               label="Total Revenue"
               value={formatCurrency(stats.totalRevenue)}
-              color="#8B5CF6"
+              color="text-violet-600"
             />
             <StatCard
               icon={TrendingUp}
               label="Occupancy Rate"
               value={stats.occupancyRate}
-              color="#EC4899"
+              color="text-pink-500"
               suffix="%"
             />
             <StatCard
               icon={Users}
               label="Total Bookings"
               value={stats.totalBookings}
-              color="#6366F1"
+              color="text-indigo-500"
             />
           </>
         )}
       </div>
 
       {/* Recent Bookings */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Clock className="w-6 h-6 text-blue-600" />
-          <h3 className="text-xl font-bold text-gray-800">Recent Bookings</h3>
+      <div>
+        <div className="flex items-center gap-2 mb-6">
+          <Clock className="w-5 h-5 text-[#86868B]" />
+          <h3 className="text-lg font-bold text-[#1D1D1F]">Recent Activity</h3>
         </div>
-        
+
         {recentBookings.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No bookings yet</p>
+          <div className="glass-card p-10 text-center">
+            <p className="text-[#86868B]">No bookings found yet.</p>
+          </div>
         ) : (
-          <div className="space-y-4">
-            {recentBookings.map(booking => (
+          <div className="glass-card overflow-hidden">
+            {recentBookings.map((booking, index) => (
               <div
                 key={booking.id}
-                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
-              >
-                <div className="flex-1">
-                  <p className="font-semibold text-gray-800">
-                    {booking.room?.roomNumber} - {booking.room?.type}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {user.role === USER_ROLES.ADMIN && booking.user?.username}
-                    {user.role === USER_ROLES.ADMIN && ' • '}
-                    {new Date(booking.checkInDate).toLocaleDateString()} to{' '}
-                    {new Date(booking.checkOutDate).toLocaleDateString()}
-                  </p>
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    booking.status === 'BOOKED'
-                      ? 'bg-blue-100 text-blue-800'
-                      : booking.status === 'COMPLETED'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
+                className={`p-5 flex items-center justify-between hover:bg-gray-50/50 transition duration-200 ${index !== recentBookings.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
-                >
-                  {booking.status}
-                </span>
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${booking.status === 'BOOKED' ? 'bg-blue-100 text-blue-600' :
+                      booking.status === 'COMPLETED' ? 'bg-green-100 text-green-600' :
+                        'bg-gray-100 text-gray-500'
+                    }`}>
+                    {booking.room?.roomNumber?.substring(0, 2) || '#'}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-[#1D1D1F]">
+                      {booking.room?.type} • Room {booking.room?.roomNumber}
+                    </p>
+                    <p className="text-xs text-[#86868B] mt-0.5">
+                      {new Date(booking.checkInDate).toLocaleDateString()} — {new Date(booking.checkOutDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${booking.status === 'BOOKED'
+                        ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                        : booking.status === 'COMPLETED'
+                          ? 'bg-green-50 text-green-600 border border-green-100'
+                          : 'bg-red-50 text-red-600 border border-red-100'
+                      }`}
+                  >
+                    {booking.status}
+                  </span>
+                  {user.role === USER_ROLES.ADMIN && (
+                    <p className="text-xs text-[#86868B] mt-1 pr-1">{booking.user?.username}</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>

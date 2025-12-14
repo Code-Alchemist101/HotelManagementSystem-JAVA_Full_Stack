@@ -1,32 +1,34 @@
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080/api';
 
-// In-memory token storage (session-based)
-let authToken = null;
-let currentUser = null;
-
+// Token management (localStorage)
 const api = {
-  // Token management (in-memory only)
   setToken: (token) => {
-    authToken = token;
+    localStorage.setItem('token', token);
   },
-  
-  getToken: () => authToken,
-  
+
+  getToken: () => localStorage.getItem('token'),
+
   setCurrentUser: (user) => {
-    currentUser = user;
+    localStorage.setItem('user', JSON.stringify(user));
   },
-  
-  getCurrentUser: () => currentUser,
-  
+
+  getCurrentUser: () => {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  },
+
   clearAuth: () => {
-    authToken = null;
-    currentUser = null;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
   },
-  
-  getHeaders: () => ({
-    'Content-Type': 'application/json',
-    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
-  }),
+
+  getHeaders: () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+  },
 
   // Enhanced error handling
   handleResponse: async (response) => {

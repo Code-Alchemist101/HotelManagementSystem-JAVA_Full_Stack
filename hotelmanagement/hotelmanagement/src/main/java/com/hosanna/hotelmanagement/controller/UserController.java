@@ -64,6 +64,7 @@ public class UserController {
             Map<String, Object> response = new HashMap<>();
             response.put("token", token);
             response.put("username", userDetails.getUsername());
+            response.put("userId", userDetails.getId());
             response.put("role", userDetails.getRole());
             response.put("message", "Login successful!");
 
@@ -77,7 +78,17 @@ public class UserController {
 
     // Get all users (Admin use-case or testing)
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<?> getAllUsers() {
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (!isAdmin) {
+             java.util.Map<String, String> error = new java.util.HashMap<>();
+             error.put("error", "Access Denied: Admin only.");
+             return ResponseEntity.status(403).body(error);
+        }
+        
         return ResponseEntity.ok(userService.getAllUsers());
     }
 

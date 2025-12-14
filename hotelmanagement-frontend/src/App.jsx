@@ -21,7 +21,11 @@ function App() {
   useEffect(() => {
     const token = api.getToken();
     const storedUser = api.getCurrentUser();
+
+    // Check if token exists and user data is valid
     if (token && storedUser) {
+      // Re-initialize API with token (redundant if using localStorage but good practice)
+      api.setToken(token);
       setUser(storedUser);
     }
   }, []);
@@ -56,14 +60,14 @@ function App() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50">
-        <Header 
-          user={user} 
+        <Header
+          user={user}
           onLogout={handleLogout}
           onToggleMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
-        
+
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <Navigation 
+          <Navigation
             currentPage={currentPage}
             onNavigate={handleNavigate}
             userRole={user.role}
